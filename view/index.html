@@ -1,0 +1,162 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js" type="text/javascript"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.13/jquery-ui.min.js" type="text/javascript"></script>
+  <script src="jquery.transform-0.9.3.min.js" type="text/javascript"></script>
+  <script src="jquery.websocket-0.0.1.js" type="text/javascript"></script>
+  <style type="text/css">
+
+  #ball{
+    width: 100px;
+    height: 100px;
+    margin: -50px 0 0 -50px;
+    left: 50%; top: 50%;
+    border: 1px solid red;
+    position: absolute;
+  }
+
+  #stick{
+    margin-left: -10px;
+    width: 20px;   
+    border: 1px solid #000;
+    border-top: 0;
+    -webkit-transform-origin: 50% 100%;
+    height: 0;
+    position:absolute;
+    bottom: 50%;
+    left: 50%;
+  }
+  #stick .colored{
+    width: 100%;
+    height: 85%;
+    background: grey;
+  }
+
+  #stick-slot{
+    width: 500px;
+    height: 500px;
+    border: 1px solid yellow;
+    position: absolute;
+    left: 500px; top: 100px;
+  }
+
+  #zoom-slot{
+    width: 150px;
+    height: 300px;
+    border: 1px solid #ccffcc;
+  }
+
+  .vertical-sider{
+    width: 50px;
+    height: 140px;
+    border: 1px solid green;  
+  }
+
+  
+  </style>
+
+</head>
+<body>
+  <div id="stick-slot">
+    <div id="stick">
+      <div class="colored"></div>
+    </div>
+    <div id="ball"></div>
+  </div>
+  <div id="zoom-slot">
+    <div id="zoom" class="vertical-slider"></div>
+  </div>
+
+  <script type="text/javascript">
+    
+    var $stick = $('#stick'), $ball = $('#ball'),
+      RADIUS = 200, ORIGIN = {left: 250, top: 250}, BALLSIZE = 100,
+      SOCKET_TARGET = 'ws://echo.websocket.org';
+
+    Number.prototype.to_deg = function(){
+      return this / Math.PI * 180;
+    };
+
+
+    // let $stick stick with the ball
+    $stick.with_ball = function(){
+      // get stick angle theta
+      var theta = 90-Math.atan($ball.y/$ball.x).to_deg();
+      if($ball.x<0){
+        theta -= 180;
+      }
+
+ //     console.log($ball.x, $ball.y, theta);
+      $stick.transform({
+        rotate: '' + theta + 'deg'
+      }).css( 'height', '' + $ball.dist + 'px' );
+    };
+
+    // resizes the ball
+    $ball.resize = function(){
+      var phi = 90 - Math.asin($ball.dist/(RADIUS*2)).to_deg(),
+          side = '' + BALLSIZE/(1+(90-phi)/160) + 'px';
+      $ball.css('width', side)
+           .css('height', side);
+    }
+
+    // adjust all things about the ball when the ball is animating
+    var animate_ball = function(){
+      var pos = $ball.position();
+      $ball.x = pos.left - ORIGIN.left, 
+      $ball.y = (pos.top - ORIGIN.top) * -1;
+      $ball.dist = Math.sqrt($ball.x*$ball.x+$ball.y*$ball.y); // calculate ball's distance to center
+
+      $stick.with_ball();
+      $ball.resize();
+    }
+
+    $ball.draggable({
+      containment: "parent",
+      drag: animate_ball,
+      stop: function(){
+        $ball.animate({
+          left: '' + ORIGIN.left + 'px', 
+          top: '' + ORIGIN.top + 'px'
+        }, {
+          step: animate_ball
+        });
+      }
+    });
+
+
+
+    $('.verticle-slider').draggable({containment: "parent", axis:"y"});
+  
+  
+  
+    //----- COMMUNICATION PART
+    var ws = new WebSocket(SOCKET_TARGET);
+    ws.onopen = function(e){
+      console.log("Socket opens.");
+    }
+    ws.onmessage = function(e){
+      console.log(e.data);
+    };
+
+
+    var send_ball_coord = function(){
+      if(ws.readyState != WebSocket.OPEN) return;
+      if(this.last_position && 
+          (this.last_position.left !== $ball.position().left ||
+           this.last_position.top !== $ball.position().top ) 
+      ){
+//        console.log(this.last_position, $ball.position(), this.last_position === $ball.position() );
+        ws.send(JSON.stringify({x: $ball.x, y: $ball.y}));
+      }
+      this.last_position = $ball.position();
+    };
+    setInterval(send_ball_coord, 20);
+    
+
+  </script>
+</body>
+</html>
