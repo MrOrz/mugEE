@@ -1,12 +1,17 @@
 #!/usr/bin/env python2
 
 import cv
+import os
 import re
 import socket
 import sys
+import threading
+import time
 
 from struct import pack
 from hashlib import md5
+
+alive = True
 
 class ConnectionFailed(Exception):
     pass
@@ -25,7 +30,7 @@ class DIPDemo(object):
         self.phi = 0
         self.theta = 0
 
-        # Initialize OpenCV
+        #: Initialize OpenCV
         cv.NamedWindow("DIP", False)
         cv.ResizeWindow("DIP", 800, 600)
 
@@ -113,16 +118,43 @@ class DIPDemo(object):
         cv.WaitKey(1000)
 
 
+def UpdateGUI():
+    """Execute OpenCV's HighGUI event loop, prevent window from not responding.
+    """
+    while alive:
+        cv.WaitKey(1000)
+        time.sleep(1)
+
+
+def onExit(*args):
+    global alive
+    alive = False
+    sys.exit(0)
+
+
 def main():
+    #: Register exit function
+    if os.name == 'posix':
+        import signal
+        signal.signal(signal.SIGTERM, onExit)
+    else:
+        import win32api
+        win32api.setConsoleCtrlHandler(onExit, True)
+
+    #: Start DIPDemo
     dip = DIPDemo()
     dip.display()
     dip.start()
-    while True: # Temporarily
+
+    #: Start background thread
+    thread = threading.Thread(target=UpdateGUI)
+    thread.start()
+
+    while True:
         dip.connect()
         dip.recv()
         dip.display()
         dip.close()
-
 
 if __name__ == '__main__':
     main()
