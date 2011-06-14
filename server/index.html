@@ -4,21 +4,20 @@
 
   <title>Test</title>
   <script type="text/javascript" charset="utf-8">
-    window.onload = function() {
+    function send(dx, dy) {
       var ws = new WebSocket("ws://localhost:9999/");
       ws.onopen = function() {
-        console.log('Opened');
-        ws.send("Hello Mr. Server!");
+        ws.send("" + dx + " " + dy);
       };
       ws.onmessage = function (e) { alert(e.data); };
-      ws.onclose = function() {
-        console.log('Closed');
-      };
     }
   </script>
 
 </head>
 <body>
-  
+  <input type="button" name="up" value="Up" onclick="send(0, 1)">
+  <input type="button" name="down" value="Down" onclick="send(0, -1)">
+  <input type="button" name="right" value="Right" onclick="send(1, 0)">
+  <input type="button" name="left" value="Left" onclick="send(-1, 0)">
 </body>
 </html>
