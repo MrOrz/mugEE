@@ -75,8 +75,9 @@
   <script type="text/javascript">
     
     var $stick = $('#stick'), $ball = $('#ball'),
-      RADIUS = 200, ORIGIN = {left: 250, top: 250}, BALLSIZE = 214,
-      SOCKET_TARGET = 'ws://echo.websocket.org';
+      RADIUS = 200, ORIGIN = {left: 279, top: 279}, BALLSIZE = 214,
+      SOCKET_TARGET = 'ws://echo.websocket.org',
+      HORIZONTAL_STEPSIZE = RADIUS/2, VERTIVAL_STEPSIZE = RADIUS / 2;
 
     Number.prototype.to_deg = function(){
       return this / Math.PI * 180;
@@ -147,16 +148,16 @@
 
     var send_ball_coord = function(){
       if(ws.readyState != WebSocket.OPEN) return;
-      if(this.last_position && 
-          (this.last_position.left !== $ball.position().left ||
-           this.last_position.top !== $ball.position().top ) 
-      ){
-//        console.log(this.last_position, $ball.position(), this.last_position === $ball.position() );
-        ws.send(JSON.stringify({x: $ball.x, y: $ball.y}));
+      if($ball.position().left !== ORIGIN.left && $ball.position().top !== ORIGIN.top ) {
+        //console.log( $ball.x, $ball.y );
+
+        ws.send(JSON.stringify({
+          x: Math.ceil( $ball.x / HORIZONTAL_STEPSIZE + 0.5 ),
+          y: Math.ceil( $ball.y / VERTIVAL_STEPSIZE + 0.5)
+        }));
       }
-      this.last_position = $ball.position();
     };
-    setInterval(send_ball_coord, 20);
+    setInterval(send_ball_coord, 200);
     
 
   </script>
