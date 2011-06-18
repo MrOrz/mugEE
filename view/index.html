@@ -109,8 +109,14 @@
     background: url('images/button3-pressed.png');
   }
 
+  #hsl{
+    position:absolute;
+    left: 100px;
+    top: 770px;
+  }
   
-  </style>
+  
+</style>
 
 </head>
 <body>
@@ -137,7 +143,7 @@
   
   <script type="text/javascript">
     
-    var $stick = $('#stick'), $ball = $('#ball'),
+    var $stick = $('#stick'), $ball = $('#ball'), $hsl = $('#hsl'),
       RADIUS = 200, ORIGIN = {left: 279, top: 279}, BALLSIZE = 214,
       SOCKET_TARGET = 'ws://echo.websocket.org',
       //SOCKET_TARGET = 'ws://localhost:9999/',
@@ -146,8 +152,9 @@
     Number.prototype.to_deg = function(){
       return this / Math.PI * 180;
     };
-
+    //-----------------------------
     //----- COMMUNICATION PART
+    
     var ws = new WebSocket(SOCKET_TARGET);
     ws.onopen = function(e){
       console.log("Socket opens.");
@@ -184,6 +191,16 @@
         preset3 = function(){
       ws.send("abs 0 45");
     };
+    
+    // hsl
+    var send_hsl = function(){
+      //console.log($hsl.hslLiteColorPicker('hsl'));
+      ws.send("hsl " + $hsl.hslLiteColorPicker('hsl').join(' '));
+    }
+    
+    
+    //----- END OF COMMUNICATION PART
+    //-------------------------------
     
     // let $stick stick with the ball
     $stick.with_ball = function(){
@@ -245,9 +262,10 @@
     $('.button2').click(preset2);
     $('.button3').click(preset3);
     
-    //$('#hsl').hslCircleColorPicker();
-    
+    $hsl.hslLiteColorPicker({onChange: send_hsl, hsl:[360, 100, 100]});
 
+    // styling hsl
+    
   </script>
 </body>
 </html>
