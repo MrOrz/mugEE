@@ -77,6 +77,7 @@
     var $stick = $('#stick'), $ball = $('#ball'),
       RADIUS = 200, ORIGIN = {left: 279, top: 279}, BALLSIZE = 214,
       SOCKET_TARGET = 'ws://echo.websocket.org',
+      //SOCKET_TARGET = 'ws://localhost:9999/',
       HORIZONTAL_STEPSIZE = RADIUS/2, VERTIVAL_STEPSIZE = RADIUS / 2;
 
     Number.prototype.to_deg = function(){
@@ -147,17 +148,18 @@
 
 
     var send_ball_coord = function(){
-      if(ws.readyState != WebSocket.OPEN) return;
-      if($ball.position().left !== ORIGIN.left && $ball.position().top !== ORIGIN.top ) {
-        //console.log( $ball.x, $ball.y );
-
-        ws.send(JSON.stringify({
-          x: Math.ceil( $ball.x / HORIZONTAL_STEPSIZE + 0.5 ),
-          y: Math.ceil( $ball.y / VERTIVAL_STEPSIZE + 0.5)
-        }));
+      if(ws.readyState === WebSocket.OPEN){
+        // submit only if the ball is not in its original position.
+        if($ball.position().left !== ORIGIN.left && $ball.position().top !== ORIGIN.top ) {
+          var dx = Math.ceil($ball.x / HORIZONTAL_STEPSIZE - 0.5),
+              dy = Math.ceil($ball.y / VERTIVAL_STEPSIZE - 0.5);
+          ws.send("" + dx + " " + dy + " " + (new Date()).getUTCMilliseconds());
+        }
       }
+      
+      setTimeout(arguments.callee, 200);
     };
-    setInterval(send_ball_coord, 200);
+    setTimeout(send_ball_coord, 200);
     
 
   </script>
