@@ -15,21 +15,21 @@
   #ball{
     width: 214px;
     height: 214px;
-    margin: -107px 0 0 -107px;
+    margin: -107px;
     background: transparent;
     left: 50%; top: 50%;
     position: absolute;
   }
 
   #stick{
-    margin-left: -22px;
     width: 45px;   
     border-top: 0;
     -webkit-transform-origin: 50% 100%;
     height: 0;
     position:absolute;
     bottom: 50%;
-    left: 50%;
+    left: 256.5px ; /* (558-45)/2 */
+    
   }
   #stick .colored{
     width: 100%;
@@ -101,10 +101,10 @@
 
     // resizes the ball
     $ball.resize = function(){
-      var phi = 90 - Math.asin($ball.dist/(RADIUS*2)).to_deg(),
+      /*var phi = 90 - Math.asin($ball.dist/(RADIUS*2)).to_deg(),
           side = '' + BALLSIZE/(1+(90-phi)/160) + 'px';
       $ball.css('width', side)
-           .css('height', side);
+           .css('height', side);*/
     }
 
     // adjust all things about the ball when the ball is animating
