@@ -5,6 +5,7 @@
   <title></title>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js" type="text/javascript"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.13/jquery-ui.min.js" type="text/javascript"></script>
+  <script src="jquery.colors.pickers.hslLite.bundle.min.js" type="text/javascript"></script>
   <script src="jquery.transform-0.9.3.min.js" type="text/javascript"></script>
   <style type="text/css">
 
@@ -29,7 +30,6 @@
     position:absolute;
     bottom: 50%;
     left: 256.5px ; /* (558-45)/2 */
-    
   }
   #stick .colored{
     width: 100%;
@@ -38,23 +38,75 @@
   }
 
   #stick-slot{
+    left: 382px; top: 52px;
     width: 558px;
     height: 558px;
     background: url(images/panel.png);
     position: absolute;
-    left: 500px; top: 100px;
   }
 
   #zoom-slot{
-    width: 150px;
-    height: 300px;
-    border: 1px solid #ccffcc;
+    width: 158px;
+    height: 558px;
+    left: 130px; top: 52px;
+    background: url(images/zoom-bg.png);
+    position: absolute;
+
   }
 
-  .vertical-sider{
-    width: 50px;
-    height: 140px;
-    border: 1px solid green;  
+  #zoom-slot>div{
+    margin: 50px 0;
+    height: 450px;
+    position:relative;
+  }
+  
+  #zoom-slot .ui-slider-handle{
+    display:block;
+    position: absolute;
+    left: 50%;
+    margin-left: -40px;
+    width: 80px;
+    height: 139px;
+    margin-bottom: -70px;
+    background: url(images/zoom-handle.png);
+  }
+  
+  #presets{
+    position:absolute;
+    left: 1016px;
+    top: 52px;
+    width: 158px;
+    height: 558px;
+  }
+  
+  .button1, .button2, .button3{
+    width: 158px; height: 158px;
+    position: absolute;
+  }
+  
+  .button1{
+    background: url('images/button1.png');
+  }
+  
+  .button1:hover{
+    background: url('images/button1-pressed.png');
+  }
+  
+  .button2{
+    background: url('images/button2.png');
+    top: 50%; margin-top: -79px;
+  }
+  
+  .button2:hover{
+    background: url('images/button2-pressed.png');
+  }
+  
+  .button3{
+    background: url('images/button3.png');
+    bottom: 0;
+  }
+  .button3:hover{
+    background: url('images/button3-pressed.png');
   }
 
   
@@ -62,29 +114,77 @@
 
 </head>
 <body>
+  <div id="zoom-slot">
+    <div></div>
+  </div>
+  
   <div id="stick-slot">
     <div id="stick">
       <div class="colored"></div>
     </div>
     <img id="ball" src="images/ball.png" />
   </div>
-  <div id="zoom-slot">
-    <div id="zoom" class="vertical-slider"></div>
+
+  <div id="presets">
+    <div class="button1"></div>
+    <div class="button2"></div>
+    <div class="button3"></div>
   </div>
 
+  <div id="hsl">
+  
+  </div>
+  
   <script type="text/javascript">
     
     var $stick = $('#stick'), $ball = $('#ball'),
       RADIUS = 200, ORIGIN = {left: 279, top: 279}, BALLSIZE = 214,
       SOCKET_TARGET = 'ws://echo.websocket.org',
       //SOCKET_TARGET = 'ws://localhost:9999/',
-      HORIZONTAL_STEPSIZE = RADIUS/2, VERTIVAL_STEPSIZE = RADIUS / 2;
+      HORIZONTAL_STEPSIZE = RADIUS/2, VERTICAL_STEPSIZE = RADIUS / 2;
 
     Number.prototype.to_deg = function(){
       return this / Math.PI * 180;
     };
 
+    //----- COMMUNICATION PART
+    var ws = new WebSocket(SOCKET_TARGET);
+    ws.onopen = function(e){
+      console.log("Socket opens.");
+    }
+    ws.onmessage = function(e){
+      console.log(e.data);
+    };
 
+    // joystick coordinates
+    setTimeout(function(){
+      if(ws.readyState === WebSocket.OPEN){
+        // submit only if the ball is not in its original position.
+        if($ball.position().left !== ORIGIN.left || $ball.position().top !== ORIGIN.top ) {
+          var dx = Math.ceil($ball.x / HORIZONTAL_STEPSIZE - 0.5),
+              dy = Math.ceil($ball.y / VERTICAL_STEPSIZE - 0.5);
+          ws.send("" + dx + " " + dy);
+        }
+      }
+      
+      setTimeout(arguments.callee, 200);
+    }, 200);
+    
+    // zoom slider
+    var send_zoom = function(e, ui){
+      ws.send(ui.value);
+    };
+    // presets
+    var preset1 = function(){
+      ws.send("abs 0 0");
+    }, 
+        preset2 = function(){
+      ws.send("abs 90 0");
+    },
+        preset3 = function(){
+      ws.send("abs 0 45");
+    };
+    
     // let $stick stick with the ball
     $stick.with_ball = function(){
       // get stick angle theta
@@ -121,6 +221,7 @@
     $ball.draggable({
       containment: "parent",
       drag: animate_ball,
+      grid: [HORIZONTAL_STEPSIZE, VERTICAL_STEPSIZE] ,
       stop: function(){
         $ball.animate({
           left: '' + ORIGIN.left + 'px', 
@@ -131,35 +232,20 @@
       }
     });
 
-
-
-    $('.verticle-slider').draggable({containment: "parent", axis:"y"});
+    $('#zoom-slot>div').slider({
+      orientation: "vertical",
+      min: 0.5,
+      max: 1.5,
+      step: 0.05,
+      value: 1,
+      slide: send_zoom
+    });
   
-  
-  
-    //----- COMMUNICATION PART
-    var ws = new WebSocket(SOCKET_TARGET);
-    ws.onopen = function(e){
-      console.log("Socket opens.");
-    }
-    ws.onmessage = function(e){
-      console.log(e.data);
-    };
-
-
-    var send_ball_coord = function(){
-      if(ws.readyState === WebSocket.OPEN){
-        // submit only if the ball is not in its original position.
-        if($ball.position().left !== ORIGIN.left && $ball.position().top !== ORIGIN.top ) {
-          var dx = Math.ceil($ball.x / HORIZONTAL_STEPSIZE - 0.5),
-              dy = Math.ceil($ball.y / VERTIVAL_STEPSIZE - 0.5);
-          ws.send("" + dx + " " + dy + " " + (new Date()).getUTCMilliseconds());
-        }
-      }
-      
-      setTimeout(arguments.callee, 200);
-    };
-    setTimeout(send_ball_coord, 200);
+    $('.button1').click(preset1);
+    $('.button2').click(preset2);
+    $('.button3').click(preset3);
+    
+    //$('#hsl').hslCircleColorPicker();
     
 
   </script>
