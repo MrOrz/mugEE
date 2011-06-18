@@ -111,11 +111,25 @@
 
   #hsl{
     position:absolute;
-    left: 100px;
-    top: 770px;
+    left: 80px;
+    top: 760px;
+    width: 1130px;
+    height: 155px;
+    background-image: url(images/hsl.png), url(images/hsl.png), url(images/hsl.png);
+    background-position: left center, center center, right center;
+    background-repeat: no-repeat;
   }
   
-  
+  #hsl .scale{
+    margin: 33px 55px;
+    border-top: 2px solid #333;
+    border-left:  2px solid #999;
+    border-right: 2px solid #999;
+    border-bottom: 2px solid #ccc;
+    border-radius: 10px;
+  }
+
+
 </style>
 
 </head>
@@ -265,6 +279,10 @@
     $hsl.hslLiteColorPicker({onChange: send_hsl, hsl:[360, 100, 100]});
 
     // styling hsl
+    $hsl.find('.scale').css({position: 'absolute', height: '50px'});
+    $hsl.find('.scale.s').css({left: '50%', marginLeft: '-100px' });
+    $hsl.find('.scale.l').css({right: '0'});
+    
     
   </script>
 </body>
