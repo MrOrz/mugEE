@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title></title>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js" type="text/javascript"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.13/jquery-ui.min.js" type="text/javascript"></script>
+  <script src="jquery.min.js" type="text/javascript"></script>
+  <script src="jquery-ui.min.js" type="text/javascript"></script>
   <script src="jquery.colors.pickers.hslLite.bundle.min.js" type="text/javascript"></script>
   <script src="jquery.transform-0.9.3.min.js" type="text/javascript"></script>
   <style type="text/css">
@@ -276,7 +276,7 @@
     $('.button2').click(preset2);
     $('.button3').click(preset3);
     
-    $hsl.hslLiteColorPicker({onChange: send_hsl, hsl:[360, 100, 100]});
+    $hsl.hslLiteColorPicker({onChange: send_hsl, hsl:[360, 0, 100]});
 
     // styling hsl
     $hsl.find('.scale').css({position: 'absolute', height: '50px'});
