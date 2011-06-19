@@ -12,6 +12,7 @@ from struct import pack
 from hashlib import md5
 
 alive = True
+count = 0
 
 def clamp(v, l, h):
     return l if v < l else (h if v > h else v)
@@ -54,6 +55,7 @@ class DIPDemo(object):
     def start(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.settimeout(3)
         self.sock.bind(("", 9999))
         self.sock.listen(5)
 
@@ -87,10 +89,13 @@ class DIPDemo(object):
         self.client.close()
 
     def recv(self):
+        global count
         if not self.client:
             raise ConnectionNotEstablished
 
         data = self.client.recv(4096)
+        if data == '':
+            count += 1
 
         validated = []
 
@@ -106,7 +111,7 @@ class DIPDemo(object):
         for v in validated:
             v = v.split(' ')
             if v[0] == 'offset':
-                self.phi = clamp(self.phi + int(v[1]), 0, 35)
+                self.phi = (self.phi + int(v[1])) % 36
                 self.theta = clamp(self.theta + int(v[2]), 0, 27)
 
                 self.op = 'CHI'
@@ -191,10 +196,20 @@ def main():
     thread.start()
 
     while True:
-        dip.connect()
+        print 'Wating for connection at localhost:9999 ...'
+        try:
+            dip.connect()
+        except socket.timeout:
+            continue
+        print 'Connection established.'
         while True:
+            global count
             dip.recv()
             dip.display()
+            if count == 3:
+                print 'Timeout, socket closed.'
+                count = 0
+                break
         dip.close()
 
 if __name__ == '__main__':
