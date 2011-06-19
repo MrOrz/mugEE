@@ -13,6 +13,7 @@ from hashlib import md5
 
 alive = True
 count = 0
+IMG_SIZE = (1167, 1024)
 
 def clamp(v, l, h):
     return l if v < l else (h if v > h else v)
@@ -49,23 +50,26 @@ class DIPDemo(object):
 
         self.img = None
         self.mask = None
-        self.hsv = cv.CreateImage((1167, 1024), cv.IPL_DEPTH_8U, 3)
+        
+        self.hsv = cv.CreateImage(IMG_SIZE, cv.IPL_DEPTH_8U, 3)
 
-        self.hue = cv.CreateImage((1167, 1024), cv.IPL_DEPTH_8U, 1)
-        self.sat = cv.CreateImage((1167, 1024), cv.IPL_DEPTH_8U, 1)
-        self.val = cv.CreateImage((1167, 1024), cv.IPL_DEPTH_8U, 1)
+        self.hue = cv.CreateImage(IMG_SIZE, cv.IPL_DEPTH_8U, 1)
+        self.sat = cv.CreateImage(IMG_SIZE, cv.IPL_DEPTH_8U, 1)
+        self.val = cv.CreateImage(IMG_SIZE, cv.IPL_DEPTH_8U, 1)
 
-        self.final = cv.CreateImage((1167, 1024), cv.IPL_DEPTH_8U, 3)
+        self.final = cv.CreateImage(IMG_SIZE, cv.IPL_DEPTH_8U, 3)
         self.op = 'CHI'
 
         #: Initialize OpenCV
         cv.NamedWindow("DIP", False)
-        cv.ResizeWindow("DIP", 800, 600)
+        cv.ResizeWindow("DIP", 1280, 1024)
+        cv.MoveWindow("DIP", 1024, 0)
 
     def start(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.settimeout(3)
+        self.sock.setblocking(1)
         self.sock.bind(("", 9999))
         self.sock.listen(5)
 
@@ -118,22 +122,26 @@ class DIPDemo(object):
 
         self.validated = validated
 
-        for v in validated:
-            v = v.split(' ')
-            if v[0] == 'offset':
+        if validated:
+            v = validated[-1].split(' ')
+            if v[0] == 'OFFSET':
                 self.phi = (self.phi + int(v[1])) % 36
                 self.theta = clamp(self.theta + int(v[2]), 0, 27)
 
                 self.op = 'CHI'
-            elif v[0] == 'abs':
+            elif v[0] == 'ABS':
                 self.phi = int(self.phi_list.index(v[1]))
                 self.theta = 27 - int(self.theta_list.index(v[2]))
                 self.op = 'CHI'
-            elif v[0] == 'hsl':
+            elif v[0] == 'H':
                 self.op = 'HSI'
                 self.hue_off = int(v[1])
-                self.sat_off = int(v[2])
-                self.val_off = int(v[3])
+            elif v[0] == 'S':
+                self.op = 'HSI'
+                self.sat_off = int(v[1])
+            elif v[0] == 'L':
+                self.op = 'HSI'
+                self.val_off = int(v[1])
 
             self.pole = 'p' if self.theta >= 14 else 'n'
 
@@ -144,32 +152,45 @@ class DIPDemo(object):
 
     def display(self):
         if self.op == 'CHI':
-            img_name = "%s_%s_%s" % (self.pole, self.theta_list[self.theta],
-                                     self.phi_list[self.phi])
-
-            print '(%s, %s) [%s]' % (self.theta_list[self.theta],
-                                     self.phi_list[self.phi], img_name)
-
-            self.img = cv.LoadImage("Images/%s.png" % img_name, 1)
-            self.mask = cv.LoadImage("Images/%s-mask.png" % img_name, 0)
-            cv.CvtColor(self.img, self.hsv, cv.CV_BGR2HSV)
-            cv.Split(self.hsv, self.hue, self.sat, self.val, None)
+            self.change()
+            self.hsi()
         elif self.op == 'HSI':
-            cv.AddS(self.hue, self.hue_off - self.hue_off_prev, self.hue)
-            cv.AddS(self.sat, self.sat_off - self.sat_off_prev, self.sat)
-            cv.AddS(self.val, self.val_off - self.val_off_prev, self.val)
-
-            self.hue_off_prev = self.hue_off
-            self.sat_off_prev = self.sat_off
-            self.val_off_prev = self.val_off
-
-            cv.Merge(self.hue, self.sat, self.val, None, self.hsv)
-            cv.CvtColor(self.hsv, self.img, cv.CV_HSV2RGB)
+            self.hsi()
 
         cv.Set(self.final, 0)
         cv.Copy(self.img, self.final, self.mask)
         cv.ShowImage("DIP", self.final)
-        cv.WaitKey(1000)
+        cv.WaitKey(1)
+
+    def change(self):
+        img_name = "%s_%s_%s" % (self.pole, self.theta_list[self.theta],
+                                 self.phi_list[self.phi])
+
+        #print '(%s, %s) [%s]' % (self.theta_list[self.theta],
+        #                         self.phi_list[self.phi], img_name)
+
+        self.img = cv.LoadImage("Images/%s.png" % img_name, 1)
+        self.mask = cv.LoadImage("Images/%s-mask.png" % img_name, 0)
+        cv.CvtColor(self.img, self.hsv, cv.CV_BGR2HSV)
+        cv.Split(self.hsv, self.hue, self.sat, self.val, None)
+        self.hue_off_prev = 0
+        self.sat_off_prev = 0
+        self.val_off_prev = 0
+
+    def hsi(self):
+        cv.AddS(self.hue, self.hue_off - self.hue_off_prev, self.hue)
+        cv.AddS(self.sat, self.sat_off - self.sat_off_prev, self.sat)
+        cv.AddS(self.val, self.val_off - self.val_off_prev, self.val)
+
+        self.hue_off_prev = self.hue_off
+        self.sat_off_prev = self.sat_off
+        self.val_off_prev = self.val_off
+
+        cv.Merge(self.hue, self.sat, self.val, None, self.hsv)
+        cv.Smooth(self.hsv, self.hsv, cv.CV_MEDIAN, 5)
+        cv.Erode(self.hsv, self.hsv)
+        cv.Dilate(self.hsv, self.hsv)
+        cv.CvtColor(self.hsv, self.img, cv.CV_HSV2RGB)
 
     def _parse_header(self, header):
         self.header_dict = { i[0]: i[1] for i in
@@ -187,7 +208,7 @@ def UpdateGUI():
     """Execute OpenCV's HighGUI event loop, prevent window from not responding.
     """
     while alive:
-        cv.WaitKey(1000)
+        cv.WaitKey(2000)
         time.sleep(1)
 
 
@@ -202,9 +223,9 @@ def main():
     if os.name == 'posix':
         import signal
         signal.signal(signal.SIGTERM, onExit)
-    else:
-        import win32api
-        win32api.setConsoleCtrlHandler(onExit, True)
+    #else:
+    #    import win32api
+    #    win32api.SetConsoleCtrlHandler(onExit, True)
 
     #: Start DIPDemo
     dip = DIPDemo()

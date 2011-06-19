@@ -178,14 +178,14 @@
       if(ws.readyState === WebSocket.OPEN){
         // submit only if the ball is not in its original position.
         if($ball.position().left !== ORIGIN.left || $ball.position().top !== ORIGIN.top ) {
-          var dx = Math.ceil($ball.x / HORIZONTAL_STEPSIZE - 0.5),
+          var dx = - Math.ceil($ball.x / HORIZONTAL_STEPSIZE - 0.5),
               dy = Math.ceil($ball.y / VERTICAL_STEPSIZE - 0.5);
           ws.send("OFFSET " + dx + " " + dy);
         }
       }
       
-      setTimeout(arguments.callee, 500);
-    }, 500);
+      setTimeout(arguments.callee, 100);
+    }, 100);
     
     // zoom slider
     var send_zoom = function(e, ui){
@@ -251,7 +251,7 @@
       containment: "parent",
       drag: animate_ball,
       grid: [HORIZONTAL_STEPSIZE, VERTICAL_STEPSIZE] ,
-      stop: function(){
+      stop: function(e){
         $ball.animate({
           left: '' + ORIGIN.left + 'px', 
           top: '' + ORIGIN.top + 'px'
@@ -281,7 +281,14 @@
       slide: send_hsl 
     });
 
-    
+    // click on $('#stick-slot') to drag.
+    $ball.click(function(e){
+      e.stopPropagation();
+    })
+    $('#stick-slot').click(function(e){
+      $ball.css({left: e.layerX, top: e.layerY});
+      $ball.draggable('option', 'stop')();
+    })
     
   </script>
 </body>

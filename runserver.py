@@ -3,11 +3,11 @@
 import BaseHTTPServer
 import SimpleHTTPServer
 
-from os import chdir, fork, execv, kill
-from signal import SIGTERM
+from os import chdir, spawnv, kill, P_NOWAIT
+from os.path import join
+from signal import CTRL_BREAK_EVENT
 
 PORT = 8000
-CPID = 0
 
 class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     pass
@@ -15,27 +15,20 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 def start_server():
     """Start the server."""
-    global CPID
 
-    chdir('../view')
+    chdir(join('..', 'view'))
     server_address = ("", PORT)
     server = BaseHTTPServer.HTTPServer(server_address, RequestHandler)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        kill(CPID, SIGTERM)
         print 'Server stopped.'
 
 def start_websocket_server():
     """Start the websocket server."""
-    global CPID
-
     chdir('server')
-    pid = fork()
-    if pid == 0:
-        execv("./serve.py", ["./serve.py"])
-    else:
-        CPID = pid
+    spawnv(P_NOWAIT, "C:\\Python27\\python.exe",
+           ["python.exe", "serve.py"])
 
 
 if __name__ == "__main__":
