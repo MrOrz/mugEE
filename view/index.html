@@ -159,8 +159,8 @@
     
     var $stick = $('#stick'), $ball = $('#ball'), $hsl = $('#hsl'),
       RADIUS = 200, ORIGIN = {left: 279, top: 279}, BALLSIZE = 214,
-      SOCKET_TARGET = 'ws://echo.websocket.org',
-      //SOCKET_TARGET = 'ws://localhost:9999/',
+      //SOCKET_TARGET = 'ws://echo.websocket.org',
+      SOCKET_TARGET = 'ws://localhost:9999/',
       HORIZONTAL_STEPSIZE = RADIUS/2, VERTICAL_STEPSIZE = RADIUS / 2;
 
     Number.prototype.to_deg = function(){
@@ -184,7 +184,7 @@
         if($ball.position().left !== ORIGIN.left || $ball.position().top !== ORIGIN.top ) {
           var dx = Math.ceil($ball.x / HORIZONTAL_STEPSIZE - 0.5),
               dy = Math.ceil($ball.y / VERTICAL_STEPSIZE - 0.5);
-          ws.send("" + dx + " " + dy);
+          ws.send("offset " + dx + " " + dy);
         }
       }
       
@@ -197,13 +197,13 @@
     };
     // presets
     var preset1 = function(){
-      ws.send("abs 0 0");
+      ws.send("abs 0000 0000");
     }, 
         preset2 = function(){
-      ws.send("abs 90 0");
+      ws.send("abs 0900 0000");
     },
         preset3 = function(){
-      ws.send("abs 0 45");
+      ws.send("abs 0000 0485");
     };
     
     // hsl

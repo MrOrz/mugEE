@@ -16,6 +16,8 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 def start_server():
     """Start the server."""
     global CPID
+
+    chdir('../view')
     server_address = ("", PORT)
     server = BaseHTTPServer.HTTPServer(server_address, RequestHandler)
     try:
@@ -28,6 +30,7 @@ def start_websocket_server():
     """Start the websocket server."""
     global CPID
 
+    chdir('server')
     pid = fork()
     if pid == 0:
         execv("./serve.py", ["./serve.py"])
@@ -36,6 +39,5 @@ def start_websocket_server():
 
 
 if __name__ == "__main__":
-    chdir('server')
     start_websocket_server()
     start_server()
