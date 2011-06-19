@@ -38,42 +38,16 @@
   }
 
   #stick-slot{
-    left: 310px; top: 38px;
+    left: 180px; top: 38px;
     width: 429px;
     height: 429px;
     background: url(images/panel.png);
     position: absolute;
   }
-
-  #zoom-slot{
-    width: 122px;
-    height: 428px;
-    left: 120px; top: 38px;
-    background: url(images/zoom-bg.png);
-    position: absolute;
-  }
-
-  #zoom-slot>div{
-    margin: 50px 0;
-    height: 350px;
-    position:relative;
-  }
-
-
-  #zoom-slot .ui-slider-handle{
-    display:block;
-    position: absolute;
-    left: 50%;
-    margin-left: -30.5px;
-    width: 61px;
-    height: 106px;
-    margin-bottom: -53px;
-    background: url(images/zoom-handle.png);
-  }
   
   #presets{
     position:absolute;
-    left: 801px;
+    left: 700px;
     top: 38px;
     width: 123px;
     height: 429px;
@@ -151,9 +125,6 @@
 
 </head>
 <body>
-  <div id="zoom-slot">
-    <div></div>
-  </div>
   
   <div id="stick-slot">
     <div id="stick">
@@ -184,8 +155,8 @@
     
     var $stick = $('#stick'), $ball = $('#ball'), $hsl = $('#hsl'),
       RADIUS = 160, ORIGIN = {left: 214, top: 214}, BALLSIZE = 164,
-      SOCKET_TARGET = 'ws://echo.websocket.org',
-      //SOCKET_TARGET = 'ws://localhost:9999/',
+      //SOCKET_TARGET = 'ws://echo.websocket.org',
+      SOCKET_TARGET = 'ws://localhost:9999/',
       HORIZONTAL_STEPSIZE = RADIUS/2, VERTICAL_STEPSIZE = RADIUS / 2;
 
     Number.prototype.to_deg = function(){
@@ -289,23 +260,23 @@
         });
       }
     });
-
-    $('#zoom-slot>div').slider({
-      orientation: "vertical",
-      min: 1,
-      max: 3,
-      value: 2,
-      slide: send_zoom
-    });
   
     $('.button1').click(preset1);
     $('.button2').click(preset2);
     $('.button3').click(preset3);
     
-    $hsl.find('.h>div, .s>div, .l>div').slider({
+    $hsl.find('.h>div, .l>div').slider({
       orientation: "horizontal",
       min: -50,
       max: 50,
+      value: 0,
+      slide: send_hsl 
+    });
+
+    $hsl.find('.s>div').slider({
+      orientation: "horizontal",
+      min: 0,
+      max: 100,
       value: 0,
       slide: send_hsl 
     });
