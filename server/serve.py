@@ -68,7 +68,6 @@ class DIPDemo(object):
     def start(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.settimeout(3)
         self.sock.setblocking(1)
         self.sock.bind(("", 9999))
         self.sock.listen(5)
@@ -238,10 +237,7 @@ def main():
 
     while True:
         print 'Wating for connection at localhost:9999 ...'
-        try:
-            dip.connect()
-        except socket.timeout:
-            continue
+        dip.connect()
         print 'Connection established.'
         while True:
             global count
