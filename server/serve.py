@@ -39,12 +39,22 @@ class DIPDemo(object):
         self.theta = 14
         self.pole = 'p'
 
+        self.hue_off = 0
+        self.sat_off = 0
+        self.val_off = 0
+
+        self.hue_off_prev = 0
+        self.sat_off_prev = 0
+        self.val_off_prev = 0
+
         self.img = None
         self.mask = None
         self.hsv = cv.CreateImage((1167, 1024), cv.IPL_DEPTH_8U, 3)
+
         self.hue = cv.CreateImage((1167, 1024), cv.IPL_DEPTH_8U, 1)
         self.sat = cv.CreateImage((1167, 1024), cv.IPL_DEPTH_8U, 1)
         self.val = cv.CreateImage((1167, 1024), cv.IPL_DEPTH_8U, 1)
+
         self.final = cv.CreateImage((1167, 1024), cv.IPL_DEPTH_8U, 3)
         self.op = 'CHI'
 
@@ -121,6 +131,9 @@ class DIPDemo(object):
                 self.op = 'CHI'
             elif v[0] == 'hsl':
                 self.op = 'HSI'
+                self.hue_off = int(v[1])
+                self.sat_off = int(v[2])
+                self.val_off = int(v[3])
 
             self.pole = 'p' if self.theta >= 14 else 'n'
 
@@ -142,7 +155,14 @@ class DIPDemo(object):
             cv.CvtColor(self.img, self.hsv, cv.CV_BGR2HSV)
             cv.Split(self.hsv, self.hue, self.sat, self.val, None)
         elif self.op == 'HSI':
-            cv.AddS(self.val, 10, self.val)
+            cv.AddS(self.hue, self.hue_off - self.hue_off_prev, self.hue)
+            cv.AddS(self.sat, self.sat_off - self.sat_off_prev, self.sat)
+            cv.AddS(self.val, self.val_off - self.val_off_prev, self.val)
+
+            self.hue_off_prev = self.hue_off
+            self.sat_off_prev = self.sat_off
+            self.val_off_prev = self.val_off
+
             cv.Merge(self.hue, self.sat, self.val, None, self.hsv)
             cv.CvtColor(self.hsv, self.img, cv.CV_HSV2RGB)
 
