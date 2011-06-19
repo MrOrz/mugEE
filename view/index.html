@@ -14,22 +14,22 @@
   }
 
   #ball{
-    width: 214px;
-    height: 214px;
-    margin: -107px;
+    width: 164px;
+    height: 164px;
+    margin: -82px;
     background: transparent;
     left: 50%; top: 50%;
     position: absolute;
   }
 
   #stick{
-    width: 45px;   
+    width: 35px;   
     border-top: 0;
     -webkit-transform-origin: 50% 100%;
     height: 0;
     position:absolute;
     bottom: 50%;
-    left: 256.5px ; /* (558-45)/2 */
+    left: 197px ; /* (429-35)/2 */
   }
   #stick .colored{
     width: 100%;
@@ -38,49 +38,23 @@
   }
 
   #stick-slot{
-    left: 382px; top: 52px;
-    width: 558px;
-    height: 558px;
+    left: 180px; top: 38px;
+    width: 429px;
+    height: 429px;
     background: url(images/panel.png);
     position: absolute;
-  }
-
-  #zoom-slot{
-    width: 158px;
-    height: 558px;
-    left: 130px; top: 52px;
-    background: url(images/zoom-bg.png);
-    position: absolute;
-
-  }
-
-  #zoom-slot>div{
-    margin: 50px 0;
-    height: 450px;
-    position:relative;
-  }
-  
-  #zoom-slot .ui-slider-handle{
-    display:block;
-    position: absolute;
-    left: 50%;
-    margin-left: -40px;
-    width: 80px;
-    height: 139px;
-    margin-bottom: -70px;
-    background: url(images/zoom-handle.png);
   }
   
   #presets{
     position:absolute;
-    left: 1016px;
-    top: 52px;
-    width: 158px;
-    height: 558px;
+    left: 700px;
+    top: 38px;
+    width: 123px;
+    height: 429px;
   }
   
   .button1, .button2, .button3{
-    width: 158px; height: 158px;
+    width: 123px; height: 122px;
     position: absolute;
   }
   
@@ -94,7 +68,7 @@
   
   .button2{
     background: url('images/button2.png');
-    top: 50%; margin-top: -79px;
+    top: 50%; margin-top: -61px;
   }
   
   .button2:hover{
@@ -111,22 +85,39 @@
 
   #hsl{
     position:absolute;
-    left: 80px;
-    top: 760px;
-    width: 1130px;
-    height: 155px;
-    background-image: url(images/hsl.png), url(images/hsl.png), url(images/hsl.png);
-    background-position: left center, center center, right center;
-    background-repeat: no-repeat;
+    left: 93px;
+    top: 588px;
+    width: 862px;
   }
   
-  #hsl .scale{
-    margin: 33px 55px;
-    border-top: 2px solid #333;
-    border-left:  2px solid #999;
-    border-right: 2px solid #999;
-    border-bottom: 2px solid #ccc;
-    border-radius: 10px;
+  #hsl>div { /* .h, .s, .l */
+    background: url(images/hsl.png);
+    width: 239px; height: 99px;
+    position: absolute;
+  }
+  #hsl .s{
+    left: 50%;
+    margin-left: -120px;
+  }
+  #hsl .l{
+    right: 0;
+  }
+
+  #hsl>div>div { /* .h>div, .s>div, .l>div */
+    width: 172px;
+    height: 100%;
+    margin: 0 auto;
+    position:relative;
+  }
+
+  #hsl .ui-slider-handle{
+    display:block;
+    position: absolute;
+    top: 15px;
+    margin-left: -17px;
+    width: 34px;
+    height: 75px;
+    background: url(images/hsl-handle.png);
   }
 
 
@@ -134,9 +125,6 @@
 
 </head>
 <body>
-  <div id="zoom-slot">
-    <div></div>
-  </div>
   
   <div id="stick-slot">
     <div id="stick">
@@ -152,13 +140,21 @@
   </div>
 
   <div id="hsl">
-  
+    <div class="h">
+      <div></div>
+    </div>
+    <div class="s">
+      <div></div>
+    </div>
+    <div class="l">
+      <div></div>
+    </div>
   </div>
   
   <script type="text/javascript">
     
     var $stick = $('#stick'), $ball = $('#ball'), $hsl = $('#hsl'),
-      RADIUS = 200, ORIGIN = {left: 279, top: 279}, BALLSIZE = 214,
+      RADIUS = 160, ORIGIN = {left: 214, top: 214}, BALLSIZE = 164,
       //SOCKET_TARGET = 'ws://echo.websocket.org',
       SOCKET_TARGET = 'ws://localhost:9999/',
       HORIZONTAL_STEPSIZE = RADIUS/2, VERTICAL_STEPSIZE = RADIUS / 2;
@@ -182,34 +178,36 @@
       if(ws.readyState === WebSocket.OPEN){
         // submit only if the ball is not in its original position.
         if($ball.position().left !== ORIGIN.left || $ball.position().top !== ORIGIN.top ) {
-          var dx = Math.ceil($ball.x / HORIZONTAL_STEPSIZE - 0.5),
+          var dx = - Math.ceil($ball.x / HORIZONTAL_STEPSIZE - 0.5),
               dy = Math.ceil($ball.y / VERTICAL_STEPSIZE - 0.5);
-          ws.send("offset " + dx + " " + dy);
+          ws.send("OFFSET " + dx + " " + dy);
         }
       }
       
-      setTimeout(arguments.callee, 500);
-    }, 500);
+      setTimeout(arguments.callee, 100);
+    }, 100);
     
     // zoom slider
     var send_zoom = function(e, ui){
-      ws.send(ui.value);
+      ws.send('ZOOM ' + ui.value);
     };
     // presets
     var preset1 = function(){
-      ws.send("abs 0000 0000");
+      ws.send("ABS 0000 0000");
     }, 
         preset2 = function(){
-      ws.send("abs 0900 0000");
+      ws.send("ABS 0900 0000");
     },
         preset3 = function(){
-      ws.send("abs 0000 0485");
+      ws.send("ABS 0000 0485");
     };
     
     // hsl
-    var send_hsl = function(){
+    var send_hsl = function(e, ui){
+      var comp = $(this).parent().attr('class').toUpperCase();
+      ws.send(comp + ' ' + ui.value);
       //console.log($hsl.hslLiteColorPicker('hsl'));
-      ws.send("hsl " + $hsl.hslLiteColorPicker('hsl').join(' '));
+//      ws.send("hsl " + $hsl.hslLiteColorPicker('hsl').join(' '));
     }
     
     
@@ -262,26 +260,27 @@
         });
       }
     });
-
-    $('#zoom-slot>div').slider({
-      orientation: "vertical",
-      min: 0.5,
-      max: 1.5,
-      step: 0.05,
-      value: 1,
-      slide: send_zoom
-    });
   
     $('.button1').click(preset1);
     $('.button2').click(preset2);
     $('.button3').click(preset3);
     
-    $hsl.hslLiteColorPicker({onChange: send_hsl, hsl:[360, 0, 100]});
+    $hsl.find('.h>div, .l>div').slider({
+      orientation: "horizontal",
+      min: -50,
+      max: 50,
+      value: 0,
+      slide: send_hsl 
+    });
 
-    // styling hsl
-    $hsl.find('.scale').css({position: 'absolute', height: '50px'});
-    $hsl.find('.scale.s').css({left: '50%', marginLeft: '-100px' });
-    $hsl.find('.scale.l').css({right: '0'});
+    $hsl.find('.s>div').slider({
+      orientation: "horizontal",
+      min: 0,
+      max: 100,
+      value: 0,
+      slide: send_hsl 
+    });
+
     
     
   </script>
